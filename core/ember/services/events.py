@@ -68,6 +68,15 @@ def _truncate_series_before(master: Event, occurrence_start: datetime) -> int | 
     return None
 
 
+def _shift_rule(event: Event, delta: timedelta, days: int) -> None:
+    """Move the recurrence rule with the edited occurrence: weekdays and the
+    end date must follow, or the series snaps back to the old pattern."""
+    if event.recurrence_by_weekday:
+        event.recurrence_by_weekday = sorted({(d + days) % 7 for d in event.recurrence_by_weekday})
+    if event.recurrence_until:
+        event.recurrence_until = event.recurrence_until + delta
+
+
 def _clone_event(
     source: Event,
     *,
@@ -226,6 +235,7 @@ async def update_event(session: AsyncSession, event: Event, data: EventUpdateReq
     # How far the edited occurrence moved; the same shift applies to every
     # occurrence the edit reaches, so the rule keeps its place in the pattern.
     delta = data.start_at - occurrence_start
+    days = (data.start_at.date() - occurrence_start.date()).days
 
     if data.scope == "all" or (
         data.scope == "this_and_future" and occurrence_start <= event.start_at
@@ -236,6 +246,7 @@ async def update_event(session: AsyncSession, event: Event, data: EventUpdateReq
         if event.recurrence_exdates:
             event.recurrence_exdates = [date + delta for date in event.recurrence_exdates]
         event.color = color
+        _shift_rule(event, delta, days)
         await session.flush()
         return await get_event(session, event.id)
 
@@ -263,6 +274,7 @@ async def update_event(session: AsyncSession, event: Event, data: EventUpdateReq
             until=tail_until,
             exdates=carried or None,
         )
+        _shift_rule(tail, delta, days)
         session.add(tail)
         await session.flush()
         return await get_event(session, tail.id)
