@@ -1,7 +1,6 @@
 from ember.models.calendar import Calendar
 from ember.models.credential import Credential
 from ember.models.event import Event, EventAttendee
-from ember.models.integration import GitHubConnection, GitHubTrackedRepo
 from ember.models.invite import Invite
 from ember.models.knowledge import (
     Board,
@@ -27,8 +26,6 @@ __all__ = [
     "Credential",
     "Event",
     "EventAttendee",
-    "GitHubConnection",
-    "GitHubTrackedRepo",
     "Invite",
     "Board",
     "BoardCard",
