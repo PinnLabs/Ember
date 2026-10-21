@@ -453,8 +453,8 @@ function isEffectivelyCompleted(entity: Entity): boolean {
   return localDayKey(completedDate) === localDayKey(new Date());
 }
 
-/** A card scheduled for a future day stays hidden from the board until its
- * due date arrives — "appear when it should appear". */
+/** A card scheduled for a future day: shown on the board, but kept out of
+ * the Today tab until its due date arrives. */
 function isScheduledForFuture(entity: Entity): boolean {
   const dueDate = stringProp(entity, "due_date");
   return Boolean(dueDate) && isFutureDate(dueDate);
@@ -1589,6 +1589,9 @@ function BoardPanel({
               (card) => !isScheduledForFuture(card.entity) && !isClosed(card.entity),
             );
             const quadrantCards = quadrantFilter
+            // Future-scheduled cards stay on the board; only the Today tab holds them back.
+            const visibleCards = columnCards.filter((card) => !isClosed(card.entity));
+            const filteredCards = quadrantFilter
               ? visibleCards.filter((card) => quadrantOf(card.entity) === quadrantFilter)
               : visibleCards;
             const filteredCards = needle
@@ -1606,7 +1609,7 @@ function BoardPanel({
                   const bFirst = quadrantOf(b.entity) === "do_now" ? 0 : 1;
                   return aFirst - bFirst;
                 });
-            const scheduledCount = columnCards.length - visibleCards.length;
+            const scheduledCount = visibleCards.filter((card) => isScheduledForFuture(card.entity)).length;
             const collapsed = collapsedColumns.has(column.id);
             const dropClass =
               columnDropHint?.columnId === column.id
