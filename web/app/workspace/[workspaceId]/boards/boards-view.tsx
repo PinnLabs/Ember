@@ -1584,14 +1584,9 @@ function BoardPanel({
             const columnCards = activeBoard.cards
               .filter((card) => card.column_id === column.id)
               .sort((a, b) => a.position - b.position);
-            // Future-scheduled cards are held back until their due date.
-            const visibleCards = columnCards.filter(
-              (card) => !isScheduledForFuture(card.entity) && !isClosed(card.entity),
-            );
-            const quadrantCards = quadrantFilter
             // Future-scheduled cards stay on the board; only the Today tab holds them back.
             const visibleCards = columnCards.filter((card) => !isClosed(card.entity));
-            const filteredCards = quadrantFilter
+            const quadrantCards = quadrantFilter
               ? visibleCards.filter((card) => quadrantOf(card.entity) === quadrantFilter)
               : visibleCards;
             const filteredCards = needle
