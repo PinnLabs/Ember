@@ -1505,6 +1505,9 @@ function BoardPanel({
     [activeBoard?.id, collapsedSnapshot],
   );
 
+  const [search, setSearch] = useState("");
+  const needle = search.trim().toLowerCase();
+
   if (!activeBoard) {
     return (
       <section className="knowledge-empty knowledge-empty--compact">
@@ -1537,6 +1540,17 @@ function BoardPanel({
           </button>
         </div>
       </header>
+
+      <div className="knowledge-searchbox" style={{ marginBottom: "0.75rem", maxWidth: "20rem" }}>
+        <Search size={15} />
+        <input
+          type="search"
+          value={search}
+          placeholder="Search tasks on this board"
+          aria-label="Search tasks on this board"
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </div>
 
       <div className="knowledge-quadrant-filter" role="group" aria-label="Filter by priority">
         {QUADRANT_ORDER.map((quadrant) => {
@@ -1572,9 +1586,14 @@ function BoardPanel({
               .sort((a, b) => a.position - b.position);
             // Future-scheduled cards stay on the board; only the Today tab holds them back.
             const visibleCards = columnCards.filter((card) => !isClosed(card.entity));
-            const filteredCards = quadrantFilter
+            const quadrantCards = quadrantFilter
               ? visibleCards.filter((card) => quadrantOf(card.entity) === quadrantFilter)
               : visibleCards;
+            const filteredCards = needle
+              ? quadrantCards.filter(({ entity }) =>
+                  `${entity.title}\n${entity.content}`.toLowerCase().includes(needle),
+                )
+              : quadrantCards;
             // Display order only — "Do now" floats to the top of the column,
             // but manual drag order (`position`) is untouched underneath, so
             // dragging still works exactly as before once the filter clears.
