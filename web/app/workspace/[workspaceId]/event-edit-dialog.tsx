@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, type SubmitEvent } from "react";
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 
-import { EVENT_COLORS } from "@/lib/types";
-
+import { EventColorPicker } from "./event-color-picker";
 import type { WeekEvent } from "./week-view";
 
 /** How far an edit to one occurrence of a series reaches, matching the
@@ -146,26 +145,7 @@ export function EventEditDialog({ event, saving, onClose, onSave }: EventEditDia
 
           <div className="event-dialog-field">
             <span className="event-dialog-label">Color</span>
-            <div className="event-dialog-swatches">
-              {EVENT_COLORS.map((option) => {
-                const selected = color === option.value;
-                const swatch = option.value ?? "#6b7280";
-                return (
-                  <button
-                    type="button"
-                    key={option.name}
-                    className={`event-swatch${selected ? " event-swatch--selected" : ""}`}
-                    style={{ background: swatch }}
-                    title={option.name}
-                    aria-label={option.name}
-                    aria-pressed={selected}
-                    onClick={() => setColor(option.value)}
-                  >
-                    {selected && <Check size={12} strokeWidth={3} />}
-                  </button>
-                );
-              })}
-            </div>
+            <EventColorPicker value={color} onChange={setColor} />
           </div>
 
           {event.recurrence && (
