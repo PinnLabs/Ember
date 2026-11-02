@@ -1,14 +1,13 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, BookOpen, Check, Image as ImageIcon, Plus, Target, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Image as ImageIcon, Plus, Target, Trash2, Upload, X } from "lucide-react";
 import { AppHeader } from "@/app/workspace/[workspaceId]/app-header";
 import { apiFetch, useRequireAuth } from "@/lib/auth-client";
-import type { HabitData, PersonalItem, Workspace } from "@/lib/types";
+import type { PersonalItem, Workspace } from "@/lib/types";
 import { VisionCanvas } from "./vision-canvas";
 import { ReadingsView } from "./readings-view";
-import { HabitTracker } from "./habit-tracker";
 
-type Tab = PersonalItem["kind"];
+type Tab = "vision" | "reading";
 type Horizon = "short" | "medium" | "long" | "none";
 type TimeframeMode = "none" | "year" | "range";
 const HORIZONS: { key: Horizon; label: string; description: string }[] = [
@@ -109,11 +108,6 @@ export function PersonalSpace() {
     setUploadWall(null);
   }
 
-  async function createHabit(habitTitle: string, data: HabitData) {
-    const response = await apiFetch("/api/personal/items", { method: "POST", body: JSON.stringify({ kind: "habit", title: habitTitle, data }) });
-    if (response.ok) { const created: PersonalItem = await response.json(); setItems((current) => [created, ...current]); }
-  }
-
   async function remove(item: PersonalItem) {
     const response = await apiFetch(`/api/personal/items/${item.id}`, { method: "DELETE" });
     if (response.ok) setItems((current) => current.filter((candidate) => candidate.id !== item.id && candidate.data.wall_id !== item.id));
@@ -129,24 +123,15 @@ export function PersonalSpace() {
     if (!response.ok) void load();
   }
 
-  async function toggleHabit(item: PersonalItem, iso: string) {
-    const dates = Array.isArray(item.data.dates) ? item.data.dates as string[] : [];
-    const next = dates.includes(iso) ? dates.filter((date) => date !== iso) : [...dates, iso];
-    setItems((current) => current.map((candidate) => candidate.id === item.id ? { ...candidate, data: { ...candidate.data, dates: next } } : candidate));
-    const response = await apiFetch(`/api/personal/items/${item.id}`, { method: "PATCH", body: JSON.stringify({ data: { ...item.data, dates: next } }) });
-    if (!response.ok) void load();
-  }
-
   if (status !== "ready") return <div className="personal-page">Loading…</div>;
   const walls = items.filter((item) => item.kind === "vision" && item.data.type === "wall");
   const activeWall = walls.find((wall) => wall.id === activeWallId) ?? null;
-  const habitItems = items.filter((item) => item.kind === "habit");
 
   return <div className="personal-shell">
     {workspaceId && <AppHeader workspaceId={workspaceId} />}
     <main className="personal-page">
       <header className="personal-hero"><span>YOUR PRIVATE SPACE</span></header>
-      <nav className="personal-tabs">{([ ["vision", ImageIcon, "Vision board"], ["reading", BookOpen, "Readings"], ["habit", Check, "Habits"] ] as const).map(([key, Icon, label]) => <button className={tab === key ? "active" : ""} key={key} onClick={() => setTab(key)}><Icon size={17}/>{label}</button>)}</nav>
+      <nav className="personal-tabs">{([ ["vision", ImageIcon, "Vision board"], ["reading", BookOpen, "Readings"] ] as const).map(([key, Icon, label]) => <button className={tab === key ? "active" : ""} key={key} onClick={() => setTab(key)}><Icon size={17}/>{label}</button>)}</nav>
 
       {tab === "vision" ? <>
         {activeWall ? (() => { const images = items.filter((item) => item.data.type === "image" && item.data.wall_id === activeWall.id); const goals = items.filter((item) => item.data.type === "goal" && item.data.wall_id === activeWall.id); return <section className="vision-board-detail">
@@ -157,9 +142,7 @@ export function PersonalSpace() {
           <div className="vision-toolbar"><div><strong>Your vision boards</strong><span>Create a space, then define goals and inspiration inside it.</span></div><button onClick={() => setWallModal(true)}><Plus size={17}/>New board</button></div>
           <section className="vision-board-grid">{walls.map((wall) => { const images = items.filter((item) => item.data.type === "image" && item.data.wall_id === wall.id); const goals = items.filter((item) => item.data.type === "goal" && item.data.wall_id === wall.id); return <button className="vision-board-card" key={wall.id} onClick={() => setActiveWallId(wall.id)}><div className="vision-board-preview">{images.slice(0, 3).map((image) => <span key={image.id} style={{ backgroundImage: `url(${String(image.data.image_url)})` }}/>) }{!images.length && <ImageIcon size={24}/>}</div><div className="vision-board-card-copy"><strong>{wall.title}</strong><span>{goals.length} {goals.length === 1 ? "goal" : "goals"} · {images.length} {images.length === 1 ? "image" : "images"}</span></div></button>; })}<button className="vision-board-add" onClick={() => setWallModal(true)}><Plus size={18}/><span>Create a new board</span></button></section>
         </>}
-      </> : tab === "habit" ? (
-        <HabitTracker habits={habitItems} onCreate={createHabit} onUpdate={updateItemData} onToggle={toggleHabit} onRemove={remove}/>
-      ) : <ReadingsView items={items} onCreated={(item) => setItems((current) => [item, ...current])} onUpdated={(item) => setItems((current) => current.map((candidate) => candidate.id === item.id ? item : candidate))}/>}
+      </> : <ReadingsView items={items} onCreated={(item) => setItems((current) => [item, ...current])} onUpdated={(item) => setItems((current) => current.map((candidate) => candidate.id === item.id ? item : candidate))}/>}
     </main>
 
     {wallModal && <div className="vision-drawer-backdrop" onClick={() => setWallModal(false)}><aside className="vision-drawer" onClick={(event) => event.stopPropagation()}><header><div><span>NEW BOARD</span><h2>Create a vision board</h2></div><button type="button" onClick={() => setWallModal(false)}><X size={19}/></button></header><form onSubmit={createWall}><div className="vision-drawer-intro"><span className="personal-modal-icon"><ImageIcon size={20}/></span><p>Name the visual space you want to build and revisit.</p></div><label className="personal-modal-field"><span>Board name</span><input autoFocus value={wallName} onChange={(event) => setWallName(event.target.value)} placeholder="e.g. My dream home" maxLength={240}/></label><footer><button type="button" className="vision-drawer-cancel" onClick={() => setWallModal(false)}>Cancel</button><button className="personal-primary">Create board</button></footer></form></aside></div>}
