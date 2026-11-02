@@ -2695,7 +2695,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.35rem 0.6rem;
 }
 
 /* Colour and text colour come from the board's per-label palette, inline. */
@@ -2722,7 +2722,9 @@
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.35rem;
+  margin-left: auto;
 }
 
 .knowledge-assignee {
