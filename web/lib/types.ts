@@ -178,6 +178,13 @@ export const EVENT_COLORS = [
   { name: "Peacock", value: "#0891b2" },
   { name: "Blueberry", value: "#4f46e5" },
   { name: "Graphite", value: "#4b5563" },
+  { name: "Tomato", value: "#dc2626" },
+  { name: "Raspberry", value: "#db2777" },
+  { name: "Orchid", value: "#c026d3" },
+  { name: "Cocoa", value: "#92400e" },
+  { name: "Olive", value: "#65a30d" },
+  { name: "Teal", value: "#0d9488" },
+  { name: "Sky", value: "#0284c7" },
 ] as const;
 
 export type MailDomainStatus = "pending" | "active" | "disabled";

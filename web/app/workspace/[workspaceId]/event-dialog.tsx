@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type SubmitEvent } from "react";
-import { Check, MapPin, Repeat, Users, X } from "lucide-react";
+import { MapPin, Repeat, Users, X } from "lucide-react";
 
 import {
   Select,
@@ -11,7 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiFetch } from "@/lib/auth-client";
-import { EVENT_COLORS, type Calendar, type RecurrenceFreq, type RecurrenceRule } from "@/lib/types";
+import type { Calendar, RecurrenceFreq, RecurrenceRule } from "@/lib/types";
+
+import { EventColorPicker } from "./event-color-picker";
 
 type EventDialogProps = {
   calendars: Calendar[];
@@ -463,26 +465,7 @@ export function EventDialog({
 
           <div className="event-dialog-field">
             <span className="event-dialog-label">Color</span>
-            <div className="event-dialog-swatches">
-              {EVENT_COLORS.map((option) => {
-                const selected = color === option.value;
-                const swatch = option.value ?? "#6b7280";
-                return (
-                  <button
-                    type="button"
-                    key={option.name}
-                    className={`event-swatch${selected ? " event-swatch--selected" : ""}`}
-                    style={{ background: swatch }}
-                    title={option.name}
-                    aria-label={option.name}
-                    aria-pressed={selected}
-                    onClick={() => setColor(option.value)}
-                  >
-                    {selected && <Check size={12} strokeWidth={3} />}
-                  </button>
-                );
-              })}
-            </div>
+            <EventColorPicker value={color} onChange={setColor} />
           </div>
 
           <div className="event-dialog-field">
