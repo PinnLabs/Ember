@@ -2124,6 +2124,7 @@ function BoardCardView({
   const recurringDaily = isDailyRecurring(card.entity);
   const hasDescription = card.entity.content.trim().length > 0;
   const quadrant = quadrantOf(card.entity);
+  const createdAt = new Date(card.entity.created_at);
 
   return (
     <article
@@ -2189,6 +2190,14 @@ function BoardCardView({
         </span>
       )}
       <span className="knowledge-card-meta">
+        <span title={`Created ${createdAt.toLocaleString()}`}>
+          <Clock size={13} aria-label="Created" />
+          {createdAt.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+            year: createdAt.getFullYear() === new Date().getFullYear() ? undefined : "numeric",
+          })}
+        </span>
         {hasDescription && (
           <span
             className="knowledge-card-description"
